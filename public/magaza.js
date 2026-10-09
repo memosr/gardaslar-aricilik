@@ -1,11 +1,10 @@
 /* Gardaşlar Arıcılık: mağaza sayfası
-   Hasat takvimi çarkı, filtreli ürün listesi, hızlı bakış, ara ara geçen arılar ve düşen bal damlaları. */
+   Hasat takvimi tablosu, filtreli ürün listesi, hızlı bakış, ara ara geçen arılar ve düşen bal damlaları. */
 function shopInit() {
   const { $, $$, fmt, esc, P, CATS, HONEY, MONTHS, NOW, status, fresh, icon, decorate, reduce } = GA;
   const SHORT = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
   const ST = { hasat: "Hasatta", taze: "Yeni hasat", akim: "Çiçeklenme", dis: "Stoktan" };
   const CAT_IC = { bal: "jar", petek: "comb", ari: "dish", malzeme: "hive", hediye: "gift" };
-  const svgNS = "http://www.w3.org/2000/svg";
   const range = (ms) => {
     if (!ms.length) return "Yıl boyu";
     const a = ms[0], b = ms[ms.length - 1];
@@ -20,74 +19,38 @@ function shopInit() {
   const sel = {}; // ürün id → seçili boy
   let honeySel = null;
 
-  /* ================= HASAT ÇARKI ================= */
-  const wheel = $("#wheel");
-  const R0 = 76, STEP = 14.5, BW = 10.5;
-  const RMAX = R0 + (HONEY.length - 1) * STEP + BW / 2;
-  const pt = (r, deg) => { const a = (deg * Math.PI) / 180; return [r * Math.cos(a), r * Math.sin(a)]; };
-  const ang = (m) => -90 + (m - 1) * 30; // ayın başlangıç açısı
-  function arcPath(r, a1, a2) {
-    const [x1, y1] = pt(r, a1), [x2, y2] = pt(r, a2);
-    return `M${x1.toFixed(2)} ${y1.toFixed(2)}A${r} ${r} 0 ${a2 - a1 > 180 ? 1 : 0} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
-  }
-  function groups(ms) {
-    const s = [...ms].sort((a, b) => a - b), out = [];
-    s.forEach((m) => { const g = out[out.length - 1]; g && g[1] === m - 1 ? (g[1] = m) : out.push([m, m]); });
-    return out;
-  }
-  const el = (tag, attrs, parent) => { const e = document.createElementNS(svgNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; };
-
-  function buildWheel() {
-    wheel.innerHTML = "";
-    // vurgulanan bu ay dilimi
-    const [cx1, cy1] = pt(R0 - 8, ang(NOW)), [cx2, cy2] = pt(RMAX + 8, ang(NOW));
-    const [cx3, cy3] = pt(RMAX + 8, ang(NOW) + 30), [cx4, cy4] = pt(R0 - 8, ang(NOW) + 30);
-    el("path", { class: "curbg", opacity: ".16", d: `M${cx1} ${cy1}L${cx2} ${cy2}A${RMAX + 8} ${RMAX + 8} 0 0 1 ${cx3} ${cy3}L${cx4} ${cy4}A${R0 - 8} ${R0 - 8} 0 0 0 ${cx1} ${cy1}Z` }, wheel);
-    // ay ayırıcıları ve adları
-    for (let m = 1; m <= 12; m++) {
-      const [x1, y1] = pt(R0 - 8, ang(m)), [x2, y2] = pt(RMAX + 8, ang(m));
-      el("line", { class: "sep", x1, y1, x2, y2 }, wheel);
-      const [lx, ly] = pt(RMAX + 26, ang(m) + 15);
-      const t = el("text", { class: "mlab" + (m === NOW ? " cur" : ""), x: lx.toFixed(1), y: ly.toFixed(1), "text-anchor": "middle", "dominant-baseline": "middle" }, wheel);
-      t.textContent = SHORT[m - 1];
-    }
-    // halkalar
-    HONEY.forEach((h, i) => {
-      const r = R0 + i * STEP;
-      const g = el("g", { class: "ring", "data-k": h.k, tabindex: "0", role: "button", "aria-label": `${h.n}: hasat ${range(h.hs)}` }, wheel);
-      el("title", {}, g).textContent = `${h.n} · Akım: ${range(h.ak)} · Hasat: ${range(h.hs)}`;
-      el("circle", { class: "trk", r, fill: "none", "stroke-width": BW }, g);
-      const draw = (ms, cls, op) => groups(ms).forEach(([a, b]) => {
-        el("path", { class: cls + (reduce ? "" : " draw"), d: arcPath(r, ang(a) + 1.2, ang(b) + 30 - 1.2), fill: "none", stroke: h.col, "stroke-width": BW, "stroke-opacity": op, pathLength: 100, style: `animation-delay:${0.15 + i * 0.07}s` }, g);
-      });
-      draw(h.ak, "ak", 0.4);
-      draw(h.hs, "hs", 1);
-      el("circle", { class: "hit", r, "stroke-width": STEP }, g);
-    });
-    // göbek ve ibre
-    el("circle", { class: "hub", r: R0 - 14 }, wheel);
-    const d = new Date(), dim = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-    const na = ang(NOW) + ((d.getDate() - 0.5) / dim) * 30;
-    const [nx1, ny1] = pt(R0 - 14, na), [nx2, ny2] = pt(RMAX + 10, na);
-    el("line", { class: "needle", x1: nx1, y1: ny1, x2: nx2, y2: ny2 }, wheel);
-    el("circle", { class: "knob", cx: nx2, cy: ny2, r: 5.5 }, wheel);
-  }
-  wheel.addEventListener("click", (e) => { const g = e.target.closest(".ring"); if (g) pickHoney(g.dataset.k); });
-  wheel.addEventListener("keydown", (e) => { const g = e.target.closest(".ring"); if (g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); pickHoney(g.dataset.k); } });
-
-  /* ---- bal listesi ---- */
-  const list = $("#honeyList");
-  list.innerHTML = HONEY.map((h) => {
-    const s = status(h);
-    const mini = Array.from({ length: 12 }, (_, i) => { const m = i + 1; const on = h.hs.includes(m) ? "hs" : h.ak.includes(m) ? "ak" : ""; return `<i class="${on}${m === NOW ? " now" : ""}" style="${on ? `background:${h.col}` : ""}"></i>`; }).join("");
-    return `<li><button class="hrow" data-k="${h.k}" aria-pressed="false"><span class="sw" style="background:${h.col}"></span><span class="nm"><b>${h.n}</b><span class="mini" aria-hidden="true">${mini}</span></span><span class="pill ${s}">${ST[s]}</span></button></li>`;
-  }).join("");
-  list.addEventListener("click", (e) => { const b = e.target.closest(".hrow"); if (b) pickHoney(b.dataset.k); });
-
-  /* ---- bu ay kartı ve çark ortası ---- */
+  /* ================= HASAT TAKVİMİ TABLOSU ================= */
+  const hcal = $("#hcal");
+  const SEASONS = [["Kış", 2], ["İlkbahar", 3], ["Yaz", 3], ["Sonbahar", 3], ["Kış", 1]];
   const prodsFor = (k) => P.filter((p) => p.hk === k);
+  const cellState = (h, m) => h.hs.includes(m) ? "hs" : h.ak.includes(m) ? "ak" : h.hs.some((x) => { const d = (m - x + 12) % 12; return d > 0 && d <= 2; }) ? "tz" : "";
+  const CELL_T = { hs: "Hasat", ak: "Akım", tz: "Yeni hasat stokta", "": "Sezon dışı" };
+  function buildCal() {
+    const d = new Date(), dim = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate(), dayPct = ((d.getDate() - 0.5) / dim) * 100;
+    let h = `<div class="hc-row hc-season" role="row"><span class="hc-lab" role="columnheader"></span>${SEASONS.map(([n, span]) => `<span class="hc-sea" style="grid-column:span ${span}" role="columnheader">${n}</span>`).join("")}<span role="columnheader"></span></div>`;
+    h += `<div class="hc-row hc-months" role="row"><span class="hc-lab" role="columnheader">Bal türü</span>${SHORT.map((s, i) => `<span class="hc-m${i + 1 === NOW ? " now" : ""}" role="columnheader">${s}${i + 1 === NOW ? `<i class="today" style="left:${dayPct}%" title="Bugün"></i>` : ""}</span>`).join("")}<span class="hc-st" role="columnheader">Bu ay</span></div>`;
+    h += HONEY.map((x) => {
+      const s = status(x), n = prodsFor(x.k).length;
+      const cells = Array.from({ length: 12 }, (_, i) => { const m = i + 1, c = cellState(x, m); return `<span class="hc-c ${c}${m === NOW ? " now" : ""}" role="cell" title="${x.n} · ${MONTHS[i]}: ${CELL_T[c]}"></span>`; }).join("");
+      return `<div class="hc-row hc-honey" role="row" data-k="${x.k}">
+        <button class="hc-lab" role="rowheader" data-k="${x.k}" aria-pressed="false"><span class="sw" style="background:${x.col}"></span><span class="nm"><b>${x.n}</b><small>Hasat: ${range(x.hs)}</small></span></button>
+        ${cells}
+        <span class="hc-st" role="cell"><span class="pill ${s}">${ST[s]}</span>${n ? `<button class="hc-go" data-go="${x.k}">${n} ürün →</button>` : ""}</span></div>`;
+    }).join("");
+    hcal.innerHTML = h;
+    // bu ay sütunu görünür olsun (telefonda yana kaydır)
+    const wrap = hcal.parentElement, nowCell = hcal.querySelector(".hc-m.now");
+    if (wrap.scrollWidth > wrap.clientWidth && nowCell) wrap.scrollLeft = Math.max(0, nowCell.offsetLeft - 156 - 46 * 4);
+  }
+  hcal.addEventListener("click", (e) => {
+    const go = e.target.closest("[data-go]");
+    if (go) { st.hk = go.dataset.go; st.cats.clear(); apply(true); return; }
+    const row = e.target.closest(".hc-honey"); if (row) pickHoney(row.dataset.k);
+  });
+
+  /* ---- bu ay / seçili bal kartı ---- */
   function renderNow() {
-    const card = $("#nowCard"), mid = $("#wheelCenter");
+    const card = $("#nowCard");
     if (!honeySel) {
       const hs = HONEY.filter((h) => status(h) === "hasat"), tz = HONEY.filter((h) => status(h) === "taze");
       const nFresh = P.filter(fresh).length;
@@ -95,15 +58,13 @@ function shopInit() {
         <h3>${hs.length ? "Hasat zamanı" : "Taze stoklar"}</h3>
         <dl class="facts"><dt>Hasatta</dt><dd>${hs.map((h) => h.n).join(", ") || "Yok"}</dd><dt>Yeni hasat</dt><dd>${tz.map((h) => h.n).join(", ") || "Yok"}</dd></dl>
         <div class="acts"><button class="btn" data-act="fresh" ${nFresh ? "" : "disabled"}>Taze ürünleri göster (${nFresh})</button></div>`;
-      mid.innerHTML = `<span class="k">Bugün</span><b>${MONTHS[NOW - 1]}</b><span>${hs.length + tz.length} bal türü taze</span>`;
     } else {
       const h = HONEY.find((x) => x.k === honeySel), s = status(h), n = prodsFor(h.k).length;
       card.innerHTML = `<span class="k">Seçili bal</span>
         <h3><span class="sw" style="background:${h.col}"></span>${h.n}</h3>
         <p>${h.note}</p>
-        <dl class="facts"><dt>Akım</dt><dd>${range(h.ak)}</dd><dt>Hasat</dt><dd>${range(h.hs)}</dd><dt>Bu ay</dt><dd><span class="pill ${s}">${ST[s]}</span></dd></dl>
+        <dl class="facts"><dt>Akım</dt><dd>${h.ak.length ? range(h.ak) : "Yok"}</dd><dt>Hasat</dt><dd>${range(h.hs)}</dd><dt>Bu ay</dt><dd><span class="pill ${s}">${ST[s]}</span></dd></dl>
         <div class="acts">${n ? `<button class="btn" data-act="show">Ürünlerini göster (${n})</button>` : ""}<button class="btn line" data-act="clear">Seçimi kaldır</button></div>`;
-      mid.innerHTML = `<span class="k">${ST[s]}</span><b>${h.n.replace(/ balı$/, "")}</b><span>Hasat: ${range(h.hs)}</span>`;
     }
   }
   $("#nowCard").addEventListener("click", (e) => {
@@ -115,9 +76,9 @@ function shopInit() {
   });
   function pickHoney(k) {
     honeySel = honeySel === k ? null : k;
-    wheel.classList.toggle("has-sel", !!honeySel);
-    $$(".ring", wheel).forEach((g) => g.classList.toggle("sel", g.dataset.k === honeySel));
-    $$(".hrow").forEach((b) => b.setAttribute("aria-pressed", b.dataset.k === honeySel));
+    hcal.classList.toggle("has-sel", !!honeySel);
+    $$(".hc-honey", hcal).forEach((r) => r.classList.toggle("sel", r.dataset.k === honeySel));
+    $$(".hc-honey .hc-lab", hcal).forEach((b) => b.setAttribute("aria-pressed", b.dataset.k === honeySel));
     renderNow();
   }
 
@@ -267,7 +228,7 @@ function shopInit() {
   }
   addEventListener("hashchange", fromHash);
 
-  buildWheel(); renderNow(); render(); fromHash();
+  buildCal(); renderNow(); render(); fromHash();
 
   /* ================= ARILAR VE BAL DAMLALARI ================= */
   if (reduce) return;

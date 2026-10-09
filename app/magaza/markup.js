@@ -15,23 +15,19 @@ const markup = `
   <section class="season" id="takvim">
     <div class="wrap">
       <nav class="crumbs" aria-label="Konum"><a href="/">Ana Sayfa</a><span aria-hidden="true">/</span><span>Mağaza</span></nav>
-      <div class="season-grid">
-        <div class="season-left">
-          <div class="season-head">
-            <p class="eyebrow">Mağaza · Hasat Takvimi</p>
-            <h1>Hangi bal, ne zaman <em>en taze?</em></h1>
-            <p class="lede">Her bal kendi çiçeğinin mevsiminde olgunlaşır. Çarktaki ibre bugünü gösterir. Bir bal seçin, mevsimini ve ürünlerini görün.</p>
-          </div>
-          <div class="now-card" id="nowCard" aria-live="polite"></div>
+      <div class="season-top">
+        <div class="season-head">
+          <p class="eyebrow">Mağaza · Hasat Takvimi</p>
+          <h1>Hangi bal, ne zaman <em>en taze?</em></h1>
+          <p class="lede">Her bal kendi çiçeğinin mevsiminde olgunlaşır. Çerçeveli sütun içinde bulunduğumuz ay. Bir satıra tıklayın, o balın ayrıntısını ve ürünlerini görün.</p>
         </div>
-        <div class="wheel-box">
-          <svg id="wheel" viewBox="-270 -270 540 540" role="img" aria-label="Bal türlerine göre 12 aylık hasat takvimi"></svg>
-          <div class="wheel-center" id="wheelCenter"></div>
-        </div>
+        <div class="now-card" id="nowCard" aria-live="polite"></div>
       </div>
-      <div class="season-list">
-        <div class="sl-head"><h2>Bal türleri ve bu ayki durumu</h2><div class="legend2"><span><i class="lg-ak"></i>Akım (çiçeklenme)</span><span><i class="lg-hs"></i>Hasat</span><span><i class="lg-now"></i>Bu ay</span></div></div>
-        <ul id="honeyList"></ul>
+      <div class="hcal-wrap" tabindex="0" aria-label="Hasat takvimi tablosu, yana kaydırılabilir">
+        <div class="hcal" id="hcal" role="table" aria-label="Bal türlerine göre 12 aylık hasat takvimi"></div>
+      </div>
+      <div class="hcal-foot">
+        <div class="legend3"><span><i class="c-ak"></i>Akım (çiçeklenme)</span><span><i class="c-hs"></i>Hasat</span><span><i class="c-tz"></i>Yeni hasat stokta</span><span><i class="c-now"></i>Bu ay</span></div>
         <p class="tiny">Takvim Türkiye geneli için yaklaşıktır. Kendi arılıklarımızın tarihleri bölgeye ve yıla göre birkaç hafta kayabilir.</p>
       </div>
     </div>
