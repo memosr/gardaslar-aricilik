@@ -16,6 +16,7 @@ Tarayıcıda http://localhost:3000 adresini aç.
 1. ✅ Genel tasarım
 2. 🟡 Gerçek içerik (ürün fotoğrafları, tarihçe, iletişim bilgileri)
 3. ✅ Next.js projesi ve GitHub
+   - `/magaza`: hasat takvimi, filtreli ürün listesi, arıcılık malzemeleri
 4. ✅ Vercel yayını
 5. ⬜ Sepet, ödeme ve sipariş sistemi
 

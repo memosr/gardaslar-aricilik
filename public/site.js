@@ -1,33 +1,8 @@
-/* Gardaşlar Arıcılık: sayfa etkileşimleri (slider, sepet, parti sorgu, galeri) */
-(function(){
-  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+/* Gardaşlar Arıcılık: ana sayfa etkileşimleri (video, slider, vitrin, parti sorgu, tarihçe, galeri) */
+function homeInit(){
+  const {$,$$,fmt,decorate,say,reduce}=GA;
   const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const toast=$('#toast');let tt;
-  const say=m=>{toast.textContent=m;toast.hidden=false;clearTimeout(tt);tt=setTimeout(()=>toast.hidden=true,2600)};
-  $$('[data-toast]').forEach(b=>b.addEventListener('click',()=>say(b.dataset.toast)));
-
-  const CAM='<svg class="cam" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="4"/></svg>';
-  const JAR='<svg class="jar" viewBox="0 0 100 130" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="22" y="8" width="56" height="20" rx="5"/><rect x="14" y="28" width="72" height="96" rx="16"/><rect x="26" y="60" width="48" height="34" rx="4"/></svg>';
-  const SRC={'09':'/media/foto3.jpg','12':'/media/foto2.jpg','13':'/media/foto1.jpg','14':'/media/foto4.jpg','19':'/media/foto3.jpg','20':'/media/foto1.jpg','22':'/media/foto2.jpg','23':'/media/foto4.jpg'};
-  function photo(el){
-    if(el.dataset.done) return; el.dataset.done=1;
-    const n=el.dataset.n, d=el.dataset.d||'';
-    if(SRC[n]){el.insertAdjacentHTML('afterbegin',`<img class="real" src="${SRC[n]}" alt="${d}" decoding="async">`);el.classList.remove('lite');return}
-    const lab = /^\d+$/.test(n)?'FOTOĞRAF '+n:n.startsWith('P')?'ÜRÜN FOTO '+n.slice(1):n.startsWith('V')?'VİDEO '+n.slice(1):'GÖRSEL '+n;
-    el.insertAdjacentHTML('beforeend',(el.dataset.jar?JAR:CAM)+`<span class="lbl"><b>${lab}</b>${d?`<span>${d}</span>`:''}</span>`);
-    el.setAttribute('role','img'); el.setAttribute('aria-label',lab+(d?': '+d:''));
-  }
-  const decorate=root=>root.querySelectorAll('.photo').forEach(photo);
-  decorate(document);
   $$('.vid-ph,.banner .photo,.cat .photo').forEach(p=>p.classList.add('has-copy'));
-
-  /* MENÜLER */
-  const ms=$('#msheet'),cs=$('#csheet');
-  $('#burger').onclick=()=>ms.hidden=false; $('#mclose').onclick=()=>ms.hidden=true;
-  ms.addEventListener('click',e=>{if(e.target===ms||e.target.tagName==='A')ms.hidden=true});
-  $('#cartBtn').onclick=()=>{renderCart();cs.hidden=false}; $('#cclose').onclick=()=>cs.hidden=true;
-  cs.addEventListener('click',e=>{if(e.target===cs)cs.hidden=true});
 
   /* VİDEO */
   const vid=$('#bgvid');
@@ -45,27 +20,14 @@
   hero.addEventListener('mouseenter',()=>hero.classList.add('paused'));hero.addEventListener('mouseleave',()=>hero.classList.remove('paused'));
   go(0);
 
-  /* ÜRÜNLER */
-  const P=[
-    {id:1,n:'Yayla Çiçek Balı',t:'bal',w:'850 g cam kavanoz',p:690,o:790,tag:'Çok satan',r:'4,9',c:214},
-    {id:2,n:'Kestane Balı',t:'bal',w:'850 g cam kavanoz',p:890,tag:'Yeni hasat',r:'4,8',c:96},
-    {id:3,n:'Karakovan Balı',t:'bal',w:'500 g cam kavanoz',p:1150,tag:'Sınırlı',r:'5,0',c:41},
-    {id:4,n:'Kasa Petek Bal',t:'petek',w:'1 kg ahşap kasa',p:990,r:'4,9',c:132},
-    {id:5,n:'Kesme Petek',t:'petek',w:'450 g',p:520,r:'4,7',c:58},
-    {id:6,n:'Taze Polen',t:'ari',w:'250 g',p:420,r:'4,8',c:77},
-    {id:7,n:'Ham Propolis',t:'ari',w:'50 g',p:360,r:'4,7',c:39},
-    {id:8,n:'Gardaşlar Hediye Kutusu',t:'ari',w:'3 x 250 g',p:1290,o:1450,tag:'Hediye',r:'5,0',c:64}
-  ];
-  const fmt=n=>'₺'+n.toLocaleString('tr-TR');
-  const favs=new Set(), cart=new Map();
+  /* VİTRİN: ortak katalogdan */
   const rail=$('#rail');
   function renderP(f){
-    const list=P.filter(x=>f==='hepsi'||x.t===f);
-    rail.innerHTML=list.map(x=>`<article class="pcard">
-      <div class="photo lite" data-n="P${x.id}" data-d="${x.n}, beyaz fon, 1:1" data-jar="1">${x.tag?`<span class="tagline">${x.tag}</span>`:''}
-        <button class="fav" aria-pressed="${favs.has(x.id)}" aria-label="${x.n} favorilere ekle" data-fav="${x.id}"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></button></div>
-      <div class="b"><span class="meta">${x.w}</span><h3>${x.n}</h3>
-      <div class="row"><span class="price">${x.o?`<s>${fmt(x.o)}</s>`:''}${fmt(x.p)}</span><button class="addc" data-add="${x.id}">+ Sepete</button></div></div></article>`).join('');
+    const list=GA.P.filter(x=>f==='hepsi'?x.feat:x.cat===f).slice(0,8);
+    rail.innerHTML=list.map(x=>{const s=x.s[x.s.length>1&&x.cat!=='malzeme'?x.s.length-1:0],si=x.s.indexOf(s);return `<article class="pcard">
+      <div class="photo lite" data-n="P${x.id}" data-d="${x.n}, beyaz fon, 1:1" data-ic="${x.ic}">${x.tag?`<span class="tagline">${x.tag}</span>`:''}</div>
+      <div class="b"><span class="meta">${s.w} · ${GA.CATS[x.cat]}</span><h3>${x.n}</h3>
+      <div class="row"><span class="price">${s.o?`<s>${fmt(s.o)}</s>`:''}${fmt(s.p)}</span><button class="addc" data-add="${x.id}" data-si="${si}">+ Sepete</button></div></div></article>`}).join('');
     decorate(rail); rail.scrollLeft=0;
   }
   renderP('hepsi');
@@ -73,28 +35,7 @@
   const step=()=>rail.querySelector('.pcard').offsetWidth+18;
   $('#rprev').onclick=()=>rail.scrollBy({left:-step(),behavior:'smooth'});
   $('#rnext').onclick=()=>rail.scrollBy({left:step(),behavior:'smooth'});
-  rail.addEventListener('click',e=>{
-    const a=e.target.closest('[data-add]'),f=e.target.closest('[data-fav]');
-    if(a){const id=+a.dataset.add;cart.set(id,(cart.get(id)||0)+1);updCount();const x=P.find(p=>p.id===id);say(x.n+' sepete eklendi')}
-    if(f){const id=+f.dataset.fav;favs.has(id)?favs.delete(id):favs.add(id);f.setAttribute('aria-pressed',favs.has(id));
-      const c=$('#favCount');c.textContent=favs.size;c.hidden=!favs.size}
-  });
-  function updCount(){let n=0;cart.forEach(v=>n+=v);const c=$('#cartCount');c.textContent=n;c.hidden=!n}
-  const FREE=750;
-  function renderCart(){
-    const box=$('#citems');let tot=0;
-    if(!cart.size){box.innerHTML='<p class="empty">Sepetiniz boş. Yayladan bir kavanoz ekleyin.</p>'}
-    else{box.innerHTML=[...cart].map(([id,q])=>{const x=P.find(p=>p.id===id);tot+=x.p*q;
-      return `<div class="ci"><div class="photo lite" data-n="P${x.id}"></div><div><b>${x.n}</b><small>${x.w}</small>
-      <div class="qty"><button data-q="-1" data-id="${id}" aria-label="Azalt">−</button><span>${q}</span><button data-q="1" data-id="${id}" aria-label="Arttır">+</button></div></div>
-      <span class="price" style="font-size:18px">${fmt(x.p*q)}</span></div>`}).join('');decorate(box)}
-    $('#ctotal').textContent=fmt(tot);
-    const left=FREE-tot;
-    $('#ship').innerHTML=(left>0?`Ücretsiz kargo için <b>${fmt(left)}</b> daha ekleyin.`:'Kargonuz ücretsiz.')+`<div class="bar2"><i style="width:${Math.min(100,tot/FREE*100)}%"></i></div>`;
-  }
-  $('#citems').addEventListener('click',e=>{const b=e.target.closest('[data-q]');if(!b)return;const id=+b.dataset.id,q=(cart.get(id)||0)+(+b.dataset.q);
-    q>0?cart.set(id,q):cart.delete(id);updCount();renderCart()});
-  $('#checkout').onclick=()=>say(cart.size?'Ödeme adımı sonraki aşamada eklenecek':'Önce sepete ürün ekleyin');
+  rail.addEventListener('click',e=>{const a=e.target.closest('[data-add]');if(a)GA.add(+a.dataset.add,+a.dataset.si)});
 
   /* PARTİ SORGULA */
   const LOTS={
@@ -149,12 +90,11 @@
   $('#years').addEventListener('click',e=>{const b=e.target.closest('button');if(b)showEra(+b.dataset.i)});
   showEra(0);
 
-  /* HASAT TAKVİMİ */
+  /* HASAT TAKVİMİ (özet; ayrıntılısı mağazada) */
   const M=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
-  const rows=[['Çiçek balı',[5,6,7],[8]],['Kestane balı',[6,7],[8,9]],['Yayla balı',[6,7,8],[9]],['Polen',[4,5,6,7],[]],['Propolis',[],[8,9,10]]];
-  const now=new Date().getMonth()+1;
+  const now=GA.NOW;
   let h='<span></span>'+M.map(m=>`<span class="m">${m}</span>`).join('');
-  rows.forEach(([n,on,pk])=>{h+=`<span class="rw">${n}</span>`;for(let i=1;i<=12;i++)h+=`<span class="c ${pk.includes(i)?'peak':on.includes(i)?'on':''} ${i===now?'now':''}" title="${n} · ${M[i-1]}"></span>`});
+  GA.HONEY.forEach(r=>{h+=`<span class="rw">${r.n}</span>`;for(let i=1;i<=12;i++)h+=`<span class="c ${r.hs.includes(i)?'peak':r.ak.includes(i)?'on':''} ${i===now?'now':''}" title="${r.n} · ${M[i-1]}"></span>`});
   $('#cal').innerHTML=h;
 
   /* GALERİ */
@@ -166,7 +106,7 @@
   $('#gallery').addEventListener('click',e=>{const b=e.target.closest('.gitem');if(b){openLb(+b.dataset.i);$('#lbClose').focus()}});
   $('#lbPrev').onclick=()=>openLb(gi-1);$('#lbNext').onclick=()=>openLb(gi+1);$('#lbClose').onclick=()=>lb.hidden=true;
   lb.addEventListener('click',e=>{if(e.target===lb)lb.hidden=true});
-  addEventListener('keydown',e=>{if(e.key==='Escape'){lb.hidden=true;ms.hidden=true;cs.hidden=true}if(!lb.hidden){if(e.key==='ArrowRight')openLb(gi+1);if(e.key==='ArrowLeft')openLb(gi-1)}});
+  addEventListener('keydown',e=>{if(e.key==='Escape')lb.hidden=true;if(!lb.hidden){if(e.key==='ArrowRight')openLb(gi+1);if(e.key==='ArrowLeft')openLb(gi-1)}});
 
   /* FORMLAR */
   $('#newsForm').addEventListener('submit',e=>{e.preventDefault();const v=$('#nEmail').value.trim();
@@ -174,4 +114,5 @@
   $('#cForm').addEventListener('submit',e=>{e.preventDefault();if(!$('#ad').value.trim()||!$('#mesaj').value.trim()){say('Lütfen adınızı ve mesajınızı yazın');return}
     say('Form hazır. Gönderim altyapısı sonraki aşamada bağlanacak')});
 
-})();
+}
+window.GA&&GA.ready?homeInit():addEventListener("ga-ready",homeInit,{once:true});

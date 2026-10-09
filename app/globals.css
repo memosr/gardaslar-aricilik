@@ -390,3 +390,9 @@ footer{background:var(--pine);color:var(--on-pine);padding-block:64px 30px;margi
 @media (max-width:600px){.hero .arrows{display:none}}
 .brand small{white-space:nowrap}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+
+/* ====== ORTAK EKLER ====== */
+.photo .pic{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);height:52%;width:auto;max-width:70%;color:var(--ink);opacity:.42}
+.menu > li > a.on{background:var(--sand);color:var(--ink);font-weight:600}
+.menu > li > a.on::after{content:"";position:absolute;left:18px;right:18px;bottom:2px;height:2px;border-radius:2px;background:var(--wax)}
+.ci .photo .pic{height:62%;opacity:.5}
