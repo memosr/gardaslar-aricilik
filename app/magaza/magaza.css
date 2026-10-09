@@ -263,3 +263,7 @@
 .drip svg{width:100%;height:100%;display:block;overflow:visible}
 @media (max-width:600px){.fbee{width:24px;height:18px}.drip{width:10px;height:13px;margin-left:-5px}}
 @media (prefers-reduced-motion: reduce){.fx{display:none}}
+.qv-pro{display:grid;gap:6px;padding:12px 0 4px;border-top:1px solid var(--line)}
+.qv-pro-h{display:flex;justify-content:space-between;gap:10px;font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:0}
+.qv-pro-h a{white-space:nowrap;color:var(--ink);text-decoration:underline;text-underline-offset:3px;letter-spacing:.04em;text-transform:none;font-family:var(--f-body);font-size:13px}
+.qv-pro .tiny{margin-top:0}

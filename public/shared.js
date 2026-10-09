@@ -95,6 +95,38 @@
   }
   const fresh = (p) => { const h = HONEY.find((x) => x.k === p.hk); return !!h && ["hasat", "taze"].includes(status(h)); };
 
+
+  /* ---------- PROLİN ÖLÇEĞİ ----------
+     Prolin balın olgunluk ve doğallık göstergesidir, sağlık puanı değildir.
+     Tipik aralıklar yaklaşıktır; kendi laboratuvar raporlarımızla güncellenecek. */
+  const PRO_MAX = 1000, PRO_MIN_LEGAL = 300;
+  const PROLIN = { narenciye: [250, 450], cicek: [400, 700], aycicek: [400, 650], kekik: [450, 750], kestane: [600, 1000], karakovan: [500, 900], cam: [400, 800] };
+  const LOT_PRO = { cicek: { v: 612, lot: "26-08" }, kestane: { v: 744, lot: "26-09" }, karakovan: { v: 820, lot: "25-07" } };
+  const ZONES = [
+    { to: 300, k: "z1", t: "Şüpheli", d: "Kodeks alt sınırının altında. Bal olgunlaşmadan alınmış ya da şeker şurubu karışmış olabilir; nem, HMF ve şeker analiziyle birlikte incelenmeli." },
+    { to: 450, k: "z2", t: "Kodekse uygun", d: "Yasal sınırın üzerinde. Narenciye gibi doğal olarak düşük prolinli ballar için iyi bir değer olabilir." },
+    { to: 600, k: "z3", t: "Olgun bal", d: "Arının balı yeterince işlediğini gösteren olumlu bir değer." },
+    { to: Infinity, k: "z4", t: "Güçlü", d: "Çok olgun bal işareti. Kestane ve çam balında bu seviye doğaldır; tek başına \"daha sağlıklı\" anlamına gelmez." },
+  ];
+  const zoneOf = (v) => ZONES.find((z) => v < z.to);
+  const edge = (p) => (p > 78 ? "left:auto;right:-6px;transform:none" : p < 22 ? "left:-6px;transform:none" : "");
+  const pct = (v) => Math.max(0, Math.min(100, (v / PRO_MAX) * 100));
+  function prolinGauge({ v = null, hk = null, lot = null, compact = false } = {}) {
+    const r = hk && PROLIN[hk];
+    const h = HONEY.find((x) => x.k === hk);
+    const ticks = [0, 300, 450, 600, 800, 1000];
+    return `<div class="pg${compact ? " compact" : ""}">
+      <div class="pg-bar" aria-hidden="true">
+        <i class="z1" style="width:${pct(300)}%"></i><i class="z2" style="width:${pct(450) - pct(300)}%"></i><i class="z3" style="width:${pct(600) - pct(450)}%"></i><i class="z4" style="width:${100 - pct(600)}%"></i>
+        <b class="pg-legal" style="left:${pct(PRO_MIN_LEGAL)}%"></b>
+        ${v != null ? `<span class="pg-pin ${zoneOf(v).k}" style="left:${pct(v)}%"><em style="${edge(pct(v))}">${v}${lot ? ` · Parti ${lot}` : ""}</em></span>` : ""}
+      </div>
+      <div class="pg-ticks" aria-hidden="true">${ticks.map((t) => `<span style="left:${pct(t)}%">${t === PRO_MAX ? "1000+" : t}</span>`).join("")}</div>
+      ${r ? `<div class="pg-range" style="left:${pct(r[0])}%;width:${pct(r[1]) - pct(r[0])}%"><span style="${edge((pct(r[0]) + pct(r[1])) / 2)}">${h ? h.n : ""}: tipik ${r[0]}–${r[1] >= PRO_MAX ? "1000+" : r[1]}</span></div>` : '<div class="pg-range empty"></div>'}
+      ${compact ? "" : `<div class="pg-zones">${ZONES.map((z, i) => `<span class="${z.k}"><i></i>${i === 0 ? "300 altı" : i === 3 ? "600 üzeri" : [0, 300, 450][i] + "–" + z.to}: ${z.t}</span>`).join("")}</div>`}
+    </div>`;
+  }
+
   /* ---------- İKONLAR (ürün fotoğrafı gelene kadar) ---------- */
   const IC = {
     jar: '<rect x="30" y="10" width="40" height="14" rx="4"/><rect x="22" y="24" width="56" height="68" rx="13"/><rect x="31" y="48" width="38" height="24" rx="3"/>',
@@ -188,7 +220,7 @@
     decorate(document);
   }
 
-  window.GA = { $, $$, fmt, esc, P, CATS, HONEY, MONTHS, NOW, status, fresh, icon, decorate, say, add, byId, reduce: matchMedia("(prefers-reduced-motion: reduce)").matches };
+  window.GA = { $, $$, fmt, esc, P, CATS, HONEY, MONTHS, NOW, status, fresh, icon, decorate, say, add, byId, PROLIN, LOT_PRO, ZONES, zoneOf, prolinGauge, reduce: matchMedia("(prefers-reduced-motion: reduce)").matches };
   const boot = () => { wire(); window.GA.ready = true; dispatchEvent(new Event("ga-ready")); };
   document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", boot) : boot();
 })();

@@ -37,11 +37,30 @@ function homeInit(){
   $('#rnext').onclick=()=>rail.scrollBy({left:step(),behavior:'smooth'});
   rail.addEventListener('click',e=>{const a=e.target.closest('[data-add]');if(a)GA.add(+a.dataset.add,+a.dataset.si)});
 
+  /* PROLİN GÖSTERGESİ */
+  const pType=$('#pType'),pRange=$('#pRange'),pVal=$('#pVal');
+  pType.innerHTML='<option value="">Bal türü seçin (isteğe bağlı)</option>'+GA.HONEY.filter(h=>GA.PROLIN[h.k]).map(h=>`<option value="${h.k}">${h.n}</option>`).join('');
+  function setPro(v,hk,lot){
+    v=Math.max(0,Math.round(+v||0));
+    if(hk!==undefined)pType.value=hk||'';
+    pRange.value=Math.min(1200,v);pVal.value=v;
+    const k=pType.value,r=GA.PROLIN[k],z=GA.zoneOf(v),h=GA.HONEY.find(x=>x.k===k);
+    $('#pGauge').innerHTML=GA.prolinGauge({v,hk:k||null,lot});
+    let cmp='';
+    if(r){cmp=v<r[0]?`${h.n} için tipik aralığın (${r[0]}–${r[1]}) altında. Bu tür için düşük sayılır.`:v>r[1]?`${h.n} için tipik aralığın üzerinde: çok olgun bir bal.`:`${h.n} için olağan aralıkta.`}
+    $('#pVerdict').innerHTML=`<span class="pv-chip ${z.k}">${z.t}</span><b>${v} mg/kg</b><p>${z.d}</p>${cmp?`<p class="pv-cmp">${cmp}</p>`:''}`;
+  }
+  pRange.addEventListener('input',()=>setPro(pRange.value,undefined));
+  pVal.addEventListener('input',()=>setPro(pVal.value,undefined));
+  pType.addEventListener('change',()=>setPro(pVal.value,undefined));
+  $$('[data-pv]').forEach(b=>b.onclick=()=>setPro(b.dataset.pv,undefined));
+  setPro(612,'cicek','26-08');
+
   /* PARTİ SORGULA */
   const LOTS={
-    '26-08':{name:'Yayla Çiçek Balı',place:'Yayla arılığı · 1.450 m',date:'14 Ağustos 2026',m:[16.8,4.2,612,18.4]},
-    '26-09':{name:'Kestane Balı',place:'Kestane ormanı arılığı · 620 m',date:'3 Eylül 2026',m:[17.4,6.1,744,22.1]},
-    '25-07':{name:'Karakovan Balı',place:'Kütük kovanlar · 1.300 m',date:'28 Temmuz 2025',m:[17.9,9.8,820,16.2]}
+    '26-08':{hk:'cicek',name:'Yayla Çiçek Balı',place:'Yayla arılığı · 1.450 m',date:'14 Ağustos 2026',m:[16.8,4.2,612,18.4]},
+    '26-09':{hk:'kestane',name:'Kestane Balı',place:'Kestane ormanı arılığı · 620 m',date:'3 Eylül 2026',m:[17.4,6.1,744,22.1]},
+    '25-07':{hk:'karakovan',name:'Karakovan Balı',place:'Kütük kovanlar · 1.300 m',date:'28 Temmuz 2025',m:[17.9,9.8,820,16.2]}
   };
   const LIM=[['Nem','%',20,'max'],['HMF','mg/kg',40,'max'],['Prolin','mg/kg',300,'min'],['Diastaz','DN',8,'min']];
   function showLot(code){
@@ -50,7 +69,8 @@ function homeInit(){
     box.innerHTML=`<div class="report-head"><div><b>${L.name}</b><span>Parti ${code} · ${L.place}</span><span>Hasat: ${L.date}</span></div><span class="ok">Kodekse uygun</span></div>`+
       LIM.map(([k,u,lim,type],i)=>{const v=L.m[i];const max=type==='max'?lim:Math.max(v,lim)*1.25;
         return `<div class="mrow"><span class="k">${k}</span><div class="bar"><i style="width:0" data-w="${Math.min(100,v/max*100)}"></i><b style="left:${lim/max*100}%"></b></div><span class="v">${String(v).replace('.',',')}<small>${u}</small></span></div>`}).join('')+
-      `<p class="report-foot">Çizgi: Türk Gıda Kodeksi Bal Tebliği sınırı · Değerler örnektir</p>`;
+      `<p class="report-foot">Çizgi: Türk Gıda Kodeksi Bal Tebliği sınırı · Değerler örnektir · <a href="#prolin" class="to-pro">Prolini ölçekte gör ↓</a></p>`;
+    setPro(L.m[2],L.hk,code.trim());
     requestAnimationFrame(()=>box.querySelectorAll('.bar i').forEach(i=>i.style.width=i.dataset.w+'%'));
   }
   $('#lotForm').addEventListener('submit',e=>{e.preventDefault();showLot($('#lotIn').value)});

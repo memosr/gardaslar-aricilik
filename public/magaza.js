@@ -204,6 +204,7 @@ function shopInit() {
     $("#qvBody").innerHTML = `<div class="qv-grid"><div class="photo lite" data-n="P${p.id}" data-d="${esc(p.n)}" data-ic="${p.ic}"></div>
       <div class="qv-info"><p class="eyebrow">${CATS[p.cat]}</p><h2 id="qvTitle">${p.n}</h2><p class="desc">${p.d}</p>${prof}
       <dl class="qv-facts">${facts}</dl>
+      ${GA.PROLIN[p.hk] ? (() => { const lot = GA.LOT_PRO[p.hk]; return `<div class="qv-pro"><div class="qv-pro-h"><span>Prolin · olgunluk göstergesi</span><a href="/#prolin">Bu ne demek?</a></div>${GA.prolinGauge({ v: lot ? lot.v : null, hk: p.hk, lot: lot ? lot.lot : null, compact: true })}<p class="tiny">${lot ? `İşaret son partinin örnek analizini gösterir.` : "Bu ürünün parti analizi yakında eklenecek."} Tipik aralık yaklaşıktır; kodeks alt sınırı 300 mg/kg (kesikli çizgi).</p></div>`; })() : ""}
       ${p.s.length > 1 ? `<div class="sizes" role="group" aria-label="Seçenek">${p.s.map((x, i) => `<button class="sz" data-qsz="${i}" aria-pressed="${i === qvState.si}">${x.w}</button>`).join("")}</div>` : ""}
       <div class="qv-buy"><span class="price" style="font-size:30px">${s.o ? `<s>${fmt(s.o)}</s>` : ""}${fmt(s.p * qvState.q)}</span>
       <div class="stepper"><button data-qq="-1" aria-label="Azalt">−</button><output>${qvState.q}</output><button data-qq="1" aria-label="Arttır">+</button></div>
